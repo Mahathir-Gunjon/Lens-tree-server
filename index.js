@@ -20,12 +20,37 @@ async function start() {
     try {
         await client.connect();
         const itemCollection = client.db('products').collection('item')
+        const reviewCollection = client.db('products').collection('review')
 
         app.get('/items', async (req, res) => {
           const query = {};
           const cursor = itemCollection.find(query)
-          const services = await cursor.toArray();
-          res.send(services)
+          const item = await cursor.toArray();
+          res.send(item)
+        })
+
+        app.get('/tool/:id', async (req, res) => {
+          const id = req.params.id;
+          const query = { _id: ObjectId(id) };
+          const singleTool = await itemCollection.findOne(query);
+          res.send(singleTool);
+      })
+
+
+        app.get('/review', async (req, res) => {
+          const query = {};
+          const cursor = reviewCollection.find(query)
+          const review = await cursor.toArray();
+          res.send(review)
+        })
+
+
+        // post function start here 
+
+        app.post('/review', async (req, res) => {
+            const review = req.body;
+            await reviewCollection.insertOne(review);
+            res.send(review)
         })
     } 
     finally{
