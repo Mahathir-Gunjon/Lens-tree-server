@@ -1,15 +1,14 @@
-const express = require('express')
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const express = require('express');
 const cors = require('cors');
-const jwt = require('jsonwebtoken')
-require('dotenv').config();
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+require("dotenv").config();
+const port = process.env.PORT || 5000;
 const app = express();
-const port = process.env.PORT || 5000
 
-
-// middleWare
+// middleware
 app.use(cors());
-app.use(express.json())
+app.use(express.json());
+
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.idddr.mongodb.net/?retryWrites=true&w=majority`
 
@@ -21,6 +20,7 @@ async function start() {
         await client.connect();
         const itemCollection = client.db('products').collection('item')
         const reviewCollection = client.db('products').collection('review')
+        const orderCollection = client.db('products').collection('order')
 
         app.get('/items', async (req, res) => {
           const query = {};
@@ -44,6 +44,12 @@ async function start() {
           res.send(review)
         })
 
+        app.get('/order', async (req, res) => {
+          const buyerEmail = req.query.buyerEmail;
+          const query = {buyerEmail: buyerEmail};
+          const orders = await orderCollection.find(query).toArray();
+          res.send(orders)
+        })
 
         // post function start here 
 
@@ -51,6 +57,12 @@ async function start() {
             const review = req.body;
             await reviewCollection.insertOne(review);
             res.send(review)
+        })
+
+        app.post('/order', async (req, res) => {
+            const order = req.body;
+            await orderCollection.insertOne(order);
+            res.send(order)
         })
     } 
     finally{
