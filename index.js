@@ -69,7 +69,7 @@ async function start() {
         const orders = await orderCollection.find(query).toArray();
         return res.send(orders)
       }
-      else{
+      else {
         return res.status(403).send({ message: 'Forbidden access' });
       }
     })
@@ -95,14 +95,22 @@ async function start() {
 
     // put function start here
 
-    app.put('/user/admin/:email', async (req, res) => {
+    app.put('/user/admin/:email', verifyJWT, async (req, res) => {
       const email = req.params.email;
-      const filter = { email: email };
-      const updateDoc = {
-        $set: {role: 'admin'},
-      };
-      const result = await userCollection.updateOne(filter, updateDoc);
-      res.send(result);
+      const requesterEmail = req.decoded.email;
+      const requesterRole = await userCollection.findOne({ email: requesterEmail });
+      if (requesterRole.role === 'admin') {
+        const filter = { email: email };
+        const updateDoc = {
+          $set: { role: 'admin' },
+        };
+        const result = await userCollection.updateOne(filter, updateDoc);
+        return res.send(result);
+      }
+      else{
+        return res.status(403).send({ message: 'Forbidden access' });
+      }
+
     })
 
     app.put('/user/:email', async (req, res) => {
