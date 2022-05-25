@@ -13,6 +13,8 @@ app.use(express.json());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.idddr.mongodb.net/?retryWrites=true&w=majority`
 
+console.log(uri);
+
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
 function verifyJWT(req, res, next) {
@@ -38,6 +40,10 @@ async function start() {
     const reviewCollection = client.db('products').collection('review')
     const orderCollection = client.db('products').collection('order')
     const userCollection = client.db('products').collection('user')
+
+    console.log('Connected to MongoDB and woking');
+
+    // get all items
 
     app.get('/items', async (req, res) => {
       const query = {};
