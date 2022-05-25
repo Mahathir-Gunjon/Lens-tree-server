@@ -3,7 +3,7 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require("dotenv").config();
-const port = process.env.PORT||5000;
+const port = process.env.PORT || 5000;
 const app = express();
 
 // middleware
@@ -89,7 +89,7 @@ async function start() {
       const email = req.params.email;
       const user = await userCollection.findOne({ email: email });
       const isAdmin = user.role === 'admin';
-      res.send({admin: isAdmin});
+      res.send({ admin: isAdmin });
 
     })
 
@@ -108,8 +108,9 @@ async function start() {
     })
 
     // put function start here
+    // verifyJWT,
 
-    app.put('/user/admin/:email', verifyJWT, async (req, res) => {
+    app.put('/user/admin/:email', async (req, res) => {
       const email = req.params.email;
       const requesterEmail = req.decoded.email;
       const requesterRole = await userCollection.findOne({ email: requesterEmail });
@@ -121,7 +122,7 @@ async function start() {
         const result = await userCollection.updateOne(filter, updateDoc);
         return res.send(result);
       }
-      else{
+      else {
         return res.status(403).send({ message: 'Forbidden access' });
       }
 
@@ -138,6 +139,15 @@ async function start() {
       const result = await userCollection.updateOne(filter, updateDoc, options);
       const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1m' });
       res.send({ result, token });
+    })
+
+    // delete function start here
+
+    app.delete('/tool/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await itemCollection.deleteOne(query);
+      res.send(result);
     })
   }
   finally {
