@@ -107,6 +107,12 @@ async function start() {
       res.send(order)
     })
 
+    app.post('/tool', async (req, res) => {
+      const newTool = req.body;
+      const result = await itemCollection.insertOne(newTool);
+      res.send(result);
+  })
+
     // put function start here
     // verifyJWT,
 
