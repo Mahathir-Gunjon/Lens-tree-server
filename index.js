@@ -165,7 +165,7 @@ start()
 // main route here | get all data
 
 app.get('/', (req, res) => {
-  res.send('Hello World!')
+  res.send('Server is running');
 })
 
 app.listen(port, () => {
