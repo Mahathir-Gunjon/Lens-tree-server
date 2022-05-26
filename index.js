@@ -5,6 +5,7 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require("dotenv").config();
 const port = process.env.PORT || 5000;
 const app = express();
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 // middleware
 app.use(cors());
@@ -44,6 +45,17 @@ async function start() {
     console.log('Connected to MongoDB and woking');
 
     // get all items
+    app.post('/create-payment-intent', verifyJWT, async(req, res) =>{
+      const items = req.body;
+      const Price = items.Price;
+      const amount = Price*100;
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount : amount,
+        currency: 'usd',
+        payment_method_types:['card']
+      });
+      res.send({clientSecret: paymentIntent.client_secret})
+    });
 
     app.get('/items', async (req, res) => {
       const query = {};
@@ -78,6 +90,13 @@ async function start() {
       else {
         return res.status(403).send({ message: 'Forbidden access' });
       }
+    })
+
+    app.get('/order/:id', verifyJWT, async(req, res) =>{
+      const id = req.params.id;
+      const query = {_id: ObjectId(id)};
+      const order = await orderCollection.findOne(query);
+      res.send(order);
     })
 
     app.get('/user', verifyJWT, async (req, res) => {
@@ -134,7 +153,7 @@ async function start() {
 
     })
 
-    app.put('/user/:email', async (req, res) => {
+    app.put('/user/:email', verifyJWT, async (req, res) => {
       const email = req.params.email;
       const user = req.body;
       const filter = { email: email };
@@ -143,7 +162,7 @@ async function start() {
         $set: user,
       };
       const result = await userCollection.updateOne(filter, updateDoc, options);
-      const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1m' });
+      const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '7d' });
       res.send({ result, token });
     })
 
@@ -153,6 +172,13 @@ async function start() {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
       const result = await itemCollection.deleteOne(query);
+      res.send(result);
+    })
+
+    app.delete('/user/:email', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await userCollection.deleteOne(query);
       res.send(result);
     })
   }
