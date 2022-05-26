@@ -81,7 +81,7 @@ async function start() {
       res.send(review)
     })
 
-    app.get('/order', verifyJWT, async (req, res) => {
+    app.get('/order', async (req, res) => {
       const buyerEmail = req.query.buyerEmail;
       const decodedEmail = req.decoded.email;
       if (buyerEmail === decodedEmail) {
@@ -94,7 +94,7 @@ async function start() {
       }
     })
 
-    app.get('/order/:id', verifyJWT, async(req, res) =>{
+    app.get('/order/:id', async(req, res) =>{
       const id = req.params.id;
       const query = {_id: ObjectId(id)};
       const order = await orderCollection.findOne(query);
@@ -115,7 +115,7 @@ async function start() {
     })
 
     // patch 
-    app.patch('/order/:id', verifyJWT, async(req, res) =>{
+    app.patch('/order/:id', async(req, res) =>{
       const id  = req.params.id;
       const payment = req.body;
       const filter = {_id: ObjectId(id)};
@@ -213,7 +213,7 @@ app.get('/', (req, res) => {
   res.send('Server is running');
 })
 
-app.listen(port, () => {
+app.listen(port, (err) => {
   console.log(`Example app listening on port ${port}`)
 })
 
