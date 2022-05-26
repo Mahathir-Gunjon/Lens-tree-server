@@ -26,6 +26,7 @@ function verifyJWT(req, res, next) {
   const token = authHeader.split(' ')[1];
   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function (err, decoded) {
     if (err) {
+      console.log(err);
       return res.status(403).send({ message: 'Forbidden access' })
     }
     req.decoded = decoded;
@@ -41,13 +42,14 @@ async function start() {
     const reviewCollection = client.db('products').collection('review')
     const orderCollection = client.db('products').collection('order')
     const userCollection = client.db('products').collection('user')
+    const paymentCollection = client.db('products').collection('payment')
 
     console.log('Connected to MongoDB and woking');
 
     // get all items
     app.post('/create-payment-intent', verifyJWT, async(req, res) =>{
       const items = req.body;
-      const Price = items.Price;
+      const Price = items.quantity;
       const amount = Price*100;
       const paymentIntent = await stripe.paymentIntents.create({
         amount : amount,
@@ -112,6 +114,23 @@ async function start() {
 
     })
 
+    // patch 
+    app.patch('/order/:id', verifyJWT, async(req, res) =>{
+      const id  = req.params.id;
+      const payment = req.body;
+      const filter = {_id: ObjectId(id)};
+      const updatedDoc = {
+        $set: {
+          paid: true,
+          transactionId: payment.transactionId
+        }
+      }
+
+      const result = await paymentCollection.insertOne(payment);
+      const updatedBooking = await orderCollection.updateOne(filter, updatedDoc);
+      res.send(updatedBooking);
+    })
+
     // post function start here 
 
     app.post('/review', async (req, res) => {
@@ -153,7 +172,7 @@ async function start() {
 
     })
 
-    app.put('/user/:email', verifyJWT, async (req, res) => {
+    app.put('/user/:email', async (req, res) => {
       const email = req.params.email;
       const user = req.body;
       const filter = { email: email };
